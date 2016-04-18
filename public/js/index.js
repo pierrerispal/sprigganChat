@@ -1,7 +1,7 @@
 var socket = io(),
     newMessagesCount = 0,
     channel='';
-    chatTitle = "Spriggan chat";
+    chatTitle = "Spriggan Chat";
 
 $('#login form').submit(function () {
     if($('#nickname').val().trim()!="" && $('#channel').val().trim()!=""){
@@ -19,92 +19,63 @@ $('#login form').submit(function () {
     return false;
 });
 
-$('#chat').on('submit','form',function(){
-    var msg = $('#m').val(),
-    send = {
+$('#chat form').submit(function(){
+    var msg = $('#m').val();
+    var send = {
         channel:channel,
         msg:msg.trim()
     };
-    if(text.msg.charAt(0)=="!"){
-        //its a command
-        socket.emit('command message', send);  
+    
+    if(msg.charAt(0)=="!"){
+        //then its a command
+        socket.emit('command message', send);
     }else{
-        //its a message        
-        socket.emit('chat message', send);        
-    }
+        //its a message text
+        socket.emit('chat message', send);
+    }    
     $('#m').val('');
     return false;
 });
 
-
-/*$('#chat').focusin(function () {
-    //clearTitle();
-});
-$('#chat').click(function () {
-    //clearTitle();
-})*/
-
-/*$('#expand').click(function(){
-    $('#list').toggleClass("open");
-});*/
-
 socket.on('connect user', function(user){
     if(user.channel==channel){
-        var msg = user.nickname+" just joined the channel.";
+        var msg = user.nickname+' just joined.';
         $('#messages').append($('<li class="connection">').text(msg));
-        console.log("user id"+user.id);
-        //@TODO: add the id somewhere
-        $('#list #userList').append($('<li class="list-group-item">').text(user.nickname));
-        scrollChatDown();
-    }
-});
-
-socket.on('init', function(user){
-    if(user.channel==channel){
-        //@TODO: add the id somewhere
-        $('#list #userList').append($('<li class="list-group-item">').text(user.nickname));
+        $('#list #userList').append($('<li class="list-group-item">').html('<span id="'+user.id+'" style="color:'+user.color+'">'+user.nickname+"</span>"));
         scrollChatDown();
     }
 });
 
 socket.on('disconnect user', function(user){
     if(user.channel==channel){
-        var msg = user.nickname+" just left the channel.";
+        var msg = user.nickname+" just left.";
         $('#messages').append($('<li class="unconnection">').text(msg));
-        //@TODO: delete person from the people list
+        //@TODO: fix that
+        //$('#'+user.id).die();
         scrollChatDown();
     }
 });
-
-/*socket.on('clear list', function(){
-    $('#list #userList').text('');
-});*/
-
-/*socket.on('user list', function(user){
+socket.on('init',function(user){
     if(user.channel==channel){
-        $('#list #userList').append($('<li class="list-group-item">').text(user.pseudo));
+        $('#list #userList').append($('<li class="list-group-item">').html('<span id="'+user.id+'" style="color:'+user.color+'">'+user.nickname+"</span>"));
     }
-});*/
+});
 
 socket.on('chat message', function(send){
     if(send.channel==channel){
-        var msg = send.nickname+" : "+send.msg;
+        var msg = '<span style="color:'+send.color+'">'+send.nickname+"</span> : "+send.msg;
         $('#messages').append($('<li>').html(msg));
         //Add 1 to the "lastMessages" and show it in the doc title
-        newMessagesCount++;
-        $(document).prop('title', '('+newMessagesCount+") - "+chatTitle);
+        /*newMessagesCount++;
+        $(document).prop('title', '('+newMessagesCount+") - "+chatTitle);*/
         scrollChatDown();
     }
 });
 
-/*socket.on('clear title', function(){
-    clearTitle();
-});*/
-
-/*function clearTitle(){
+function clearTitle(){
     newMessagesCount=0;
     $(document).prop('title',chatTitle);
-}*/
+}
 
 function scrollChatDown(){
     var messageHeight = $('#messages').height();

@@ -5,8 +5,11 @@ var express = require('express'),
     server = http.createServer(app),
     io = require('socket.io')(server),
     port = process.env.PORT || 3000,
+
+    //Setup modules and specifics variable
     reader = require('./messages'),
     userList = [];
+
 //Run the server
 server.listen(port, function () {
     console.log('Server listening at port %d', port);
@@ -19,51 +22,46 @@ io.on('connection', function(socket){
 
     socket.on('connect user', function(user){
         if(user.nickname!="" && user.nickname!=""){
-            //@TODO: check that the nickname isnt already in use
             console.log(user.nickname+" just joined the channel #"+user.channel);
-            //Need to add options here
-            //like random color, role and stuff
-            user['color']='red';
+            //need to add the user parameters right here
             user['id']=socket.id;
+            //@TODO: give a random color
+            user['color']='red';
             
             socket.user = user;
+            sendAllUsers(socket);
             userList.push(socket);
-            socket.broadcast.emit('connect user',user);
-            init(socket);
+            io.emit('connect user',socket.user);
         }
     });
 
-    socket.on('disconnect', function () {  
-        io.emit('disconnect user',socket.user);
+    socket.on('disconnect', function () {
+        console.log("someone just left");
         //if user is connected
         if(socket.user!=null){
-            console.log(socket.user.nickname+" just left");
             var i = userList.indexOf(socket);
             userList.splice(i,1);
+            io.emit('disconnect user',socket.user);
         }
     });
 
     socket.on('chat message', function(send){
-        //socket.broadcast.to(socketid).emit('message', 'for your eyes only');
-        
         if(socket.user==null){
             socket.emit('refresh user');
         }
         if(send.msg!=""){
             send.msg = reader.readMessage(send.msg);
             send.nickname = socket.user.nickname;
+            send['color']=socket.user.color;
             console.log("["+send.channel+"] "
                 +send.nickname
                 +" : "+send.msg);
             io.emit('chat message', send);
         }
     });
-    socket.on('command message',function(send){
-        
-    })
 });
 
-function init(socket){
+function sendAllUsers(socket){
     userList.forEach(function (e,i,a) {
         socket.emit('init', e.user);
     });
