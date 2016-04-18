@@ -5,12 +5,8 @@ var express = require('express'),
     server = http.createServer(app),
     io = require('socket.io')(server),
     port = process.env.PORT || 3000,
-
-    //Setup modules and specifics variable
-    //bot = require('./bot'),
     reader = require('./messages'),
     userList = [];
-
 //Run the server
 server.listen(port, function () {
     console.log('Server listening at port %d', port);
@@ -22,49 +18,53 @@ io.on('connection', function(socket){
     console.log("new connection");
 
     socket.on('connect user', function(user){
-        if(user.pseudo!="" && user.pseudo!=""){
-            /*console.log(user.pseudo+" just joined the channel #"+user.channel);
+        if(user.nickname!="" && user.nickname!=""){
+            //@TODO: check that the nickname isnt already in use
+            console.log(user.nickname+" just joined the channel #"+user.channel);
+            //Need to add options here
+            //like random color, role and stuff
+            user['color']='red';
+            user['id']=socket.id;
+            
             socket.user = user;
             userList.push(socket);
-            updateUserList('connect',socket.user);*/
+            socket.broadcast.emit('connect user',user);
+            init(socket);
         }
     });
 
-    socket.on('disconnect', function () {
-        console.log("someone just left");
+    socket.on('disconnect', function () {  
+        io.emit('disconnect user',socket.user);
         //if user is connected
-        /*if(socket.user!=null){
+        if(socket.user!=null){
+            console.log(socket.user.nickname+" just left");
             var i = userList.indexOf(socket);
             userList.splice(i,1);
-            updateUserList('disconnect',socket.user);
-        }*/
+        }
     });
 
     socket.on('chat message', function(send){
-        /*if(socket.user==null){
+        //socket.broadcast.to(socketid).emit('message', 'for your eyes only');
+        
+        if(socket.user==null){
             socket.emit('refresh user');
         }
         if(send.msg!=""){
             send.msg = reader.readMessage(send.msg);
-            send.pseudo = socket.user.pseudo;
+            send.nickname = socket.user.nickname;
             console.log("["+send.channel+"] "
-                +send.pseudo
+                +send.nickname
                 +" : "+send.msg);
             io.emit('chat message', send);
-            if(bot.command(send)){
-                io.emit('chat message',bot.botMessage(send,userList));
-            }
-            socket.emit('clear title');
-        }*/
+        }
     });
+    socket.on('command message',function(send){
+        
+    })
 });
 
-
-//useful function to make things shorter
-/*function updateUserList(emit,user){
-    io.emit(emit+' user', user);
-    io.emit('clear list');
+function init(socket){
     userList.forEach(function (e,i,a) {
-        io.emit('user list', e.user);
+        socket.emit('init', e.user);
     });
-}*/
+}

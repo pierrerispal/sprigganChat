@@ -69,12 +69,18 @@ body {
     background: #eee;
 }
 #messages li.connection {
-    background-color: #000066;
+    background-color: #629632;
     color:white;
 }
 #messages li.unconnection {
-    background-color: #660000;
+    background-color: #8B4726;
     color:white;
+    /*
+    8B4726
+    A0522D
+    87421F
+    6B4226
+    */
 }
 
 #chat form{
