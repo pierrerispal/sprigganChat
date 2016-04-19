@@ -63,7 +63,7 @@ socket.on('init',function(user){
 
 socket.on('chat message', function(send){
     if(send.channel==channel){
-        var msg = '<span style="color:'+send.color+'">'+send.nickname+"</span> : "+send.msg;
+        var msg = '<span style="color:'+send.color+'">'+send.nickname+"</span> : "+readMessage(send.msg);
         $('#messages').append($('<li>').html(msg));
         //Add 1 to the "lastMessages" and show it in the doc title
         /*newMessagesCount++;
@@ -84,4 +84,21 @@ function scrollChatDown(){
         $('#messages').scrollTop($('#messages').get(0).scrollHeight);
     }
 
+}
+
+var readMessage = function(message){
+    message = urlify(message);
+    message = smileyify(message);
+    return message;
+}
+
+function urlify(message){
+    var urlRegex = /(https?:\/\/[^\s]+)/g;
+    return message.replace(urlRegex, function(url) {
+        return '<a href="' + url + '" target="_blank">' + url + '</a>';
+    });
+}
+function smileyify(message){
+    var smileySpriggan = ':spriggan';
+    return message.replace(smileySpriggan,'<img src="/img/spriggan.png" />');
 }
