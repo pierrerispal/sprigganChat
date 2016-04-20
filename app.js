@@ -9,7 +9,9 @@ var express = require('express'),
     //Setup modules and specifics variable
     //reader = require('./messages'),
     userList = [];
-
+    var channelList=[];
+    channelList.push("none");
+    channelList.push("Main channel");
 //Run the server
 server.listen(port, function () {
     console.log('Server listening at port %d', port);
@@ -19,15 +21,21 @@ app.use(express.static(__dirname + '/public'));
 
 io.on('connection', function(socket){
     console.log("new connection");
-
+    sendAllChannels(socket);
     socket.on('connect user', function(user){
         if(user.nickname!="" && user.nickname!=""){
             console.log(user.nickname+" just joined the channel #"+user.channel);
+            var i = channelList.indexOf(user.channel);
+            if(i==-1){
+              channelList.push(user.channel);
+              io.emit("channel list",user.channel);
+            }
+
             //need to add the user parameters right here
             user['id']=socket.id;
             //user['color']='#'+Math.floor(Math.random()*16777215).toString(16);
             user['color']='#' + ("000000" + Math.random().toString(16).slice(2, 8).toUpperCase()).slice(-6);
-            
+
             socket.user = user;
             sendAllUsers(socket);
             userList.push(socket);
@@ -58,15 +66,15 @@ io.on('connection', function(socket){
             io.emit('chat message', send);
         }
     });
-    
+
     socket.on('command message',function(send){
         if(send.msg.lastIndexOf("!nick")!=-1){
             var newNick=send.msg.slice(6).trim();
             console.log("new nick : "+newNick);
         }else if(send.msg.lastIndexOf("!quit")!=-1){
-            
+
         }else if(send.msg.lastIndexOf("!join")!=-1){
-            
+
         }else{
             //no command found
         }
@@ -77,4 +85,19 @@ function sendAllUsers(socket){
     userList.forEach(function (e,i,a) {
         socket.emit('init', e.user);
     });
+}
+
+function sendAllChannels(socket){
+  /*userList.forEach(function(e,i,a){
+      var i = channelList.indexOf(e.user.channel);
+      console.log("i : "+i);
+      if(i==-1){
+        channelList.push(e.user.channel);
+      }
+  });
+  console.log("channels"+channelList.length*/
+  channelList.forEach(function(e,i,a){
+      console.log(channelList[i]);
+      socket.emit('channel list', channelList[i]);
+  });
 }
